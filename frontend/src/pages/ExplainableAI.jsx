@@ -1,0 +1,109 @@
+// src/pages/ExplainableAI.jsx — SHAP-style feature importance & AI reasoning
+import { motion } from 'framer-motion'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer } from 'recharts'
+import { XAI_FEATURES } from '../data/mockData'
+import { FlaskConical, TrendingUp, TrendingDown, CheckCircle2 } from 'lucide-react'
+
+const Tip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{ background:'#0e0e1a', border:'1px solid rgba(139,92,246,0.3)', borderRadius:8, padding:'8px 12px', fontSize:'0.78rem' }}>
+      <div style={{ color:'var(--text-primary)', fontWeight:600, marginBottom:4 }}>{label}</div>
+      <div style={{ color:'var(--cyan-400)' }}>Importance: {(payload[0].value*100).toFixed(1)}%</div>
+    </div>
+  )
+}
+
+const EXPLANATIONS = [
+  { title:'Why was FRB20240101A flagged?',         confidence:0.97, reason:'DM of 557.4 pc/cm³ exceeds MW foreground model by 3.2σ. Fluence (12.3 Jy·ms) and pulse duration (4.2 ms) match known FRB population statistics.', verdict:'ANOMALY' },
+  { title:'Why is AT2024abc a HIGH alert?',        confidence:0.91, reason:'Optical transient showed 2.8 mag rise in 48h. Color index B–V = –0.3 inconsistent with known variable stars. Host galaxy offset 1.2 arcsec suggests non-nuclear origin.', verdict:'ANOMALY' },
+  { title:'Why was EVT-2024-006 rated LOW priority?',confidence:0.55, reason:'Spectral emission line anomaly is marginal (1.4σ). Hα/Hβ ratio deviation within 2σ of M-dwarf flare template. No coincident radio counterpart detected.', verdict:'NORMAL' },
+]
+
+export default function ExplainableAI() {
+  return (
+    <div className="page-container">
+      <h1 className="page-title">Explainable <span className="gradient-text">AI</span></h1>
+      <p className="page-subtitle">SHAP-inspired feature importance · AI reasoning transparency · Decision explanations</p>
+
+      <div className="grid-2" style={{ marginBottom:24 }}>
+        {/* Feature importance chart */}
+        <motion.div className="glow-card" style={{ padding:24 }} initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.1 }}>
+          <div className="section-label">Feature Importance — FRB Detection Model</div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={XAI_FEATURES} layout="vertical" margin={{ top:5, right:30, left:140, bottom:5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
+              <XAxis type="number" domain={[0,0.35]} tick={{ fill:'#64748b', fontSize:10 }} stroke="rgba(255,255,255,0.1)" tickFormatter={v => `${(v*100).toFixed(0)}%`} />
+              <YAxis type="category" dataKey="feature" tick={{ fill:'#94a3b8', fontSize:11 }} width={140} stroke="none" />
+              <Tooltip content={<Tip />} />
+              <Bar dataKey="importance" radius={[0,4,4,0]}>
+                {XAI_FEATURES.map((entry, i) => (
+                  <Cell key={i} fill={entry.direction==='positive' ? '#8b5cf6' : '#22d3ee'} fillOpacity={0.85} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div style={{ display:'flex', gap:20, marginTop:8, fontSize:'0.73rem', color:'var(--text-muted)' }}>
+            <span style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ width:12, height:12, borderRadius:3, background:'#8b5cf6', display:'inline-block' }} /> Positive contribution</span>
+            <span style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ width:12, height:12, borderRadius:3, background:'#22d3ee', display:'inline-block' }} /> Negative contribution</span>
+          </div>
+        </motion.div>
+
+        {/* Model confidence interpretation */}
+        <motion.div className="glow-card" style={{ padding:24 }} initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.15 }}>
+          <div className="section-label">Confidence Interpretation Scale</div>
+          {[
+            { range:'≥ 0.95', label:'Confirmed Detection',    color:'var(--green-400)',  desc:'High-confidence event. Immediate follow-up recommended.' },
+            { range:'0.85–0.94',label:'Strong Candidate',    color:'var(--cyan-400)',    desc:'Likely real event. Expert validation required.' },
+            { range:'0.70–0.84',label:'Moderate Candidate',  color:'var(--amber-400)',   desc:'Possible event. Cross-catalog matching advised.' },
+            { range:'0.50–0.69',label:'Weak Candidate',      color:'var(--orange-400)', desc:'Low confidence. Additional observations needed.' },
+            { range:'< 0.50',  label:'Likely Noise/RFI',     color:'var(--red-400)',    desc:'Likely false positive. Minimal follow-up.' },
+          ].map(({ range, label, color, desc }) => (
+            <div key={range} style={{ display:'flex', gap:12, padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.04)' }}>
+              <div style={{ width:72, fontFamily:'var(--font-mono)', fontSize:'0.75rem', color, fontWeight:700, flexShrink:0 }}>{range}</div>
+              <div>
+                <div style={{ fontSize:'0.82rem', fontWeight:700, color, marginBottom:2 }}>{label}</div>
+                <div style={{ fontSize:'0.75rem', color:'var(--text-muted)' }}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Event explanations */}
+      <div className="section-label">AI Decision Explanations</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+        {EXPLANATIONS.map((exp, i) => (
+          <motion.div key={i} className="glow-card" style={{ padding:22 }} initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.2+i*0.08 }}>
+            <div style={{ display:'flex', alignItems:'flex-start', gap:14 }}>
+              <div style={{ flexShrink:0, marginTop:2 }}>
+                {exp.verdict==='ANOMALY'
+                  ? <span className="badge badge-high">ANOMALY</span>
+                  : <span className="badge badge-low">NORMAL</span>}
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:'0.9rem', fontWeight:700, color:'var(--text-primary)', marginBottom:6 }}>{exp.title}</div>
+                <p style={{ fontSize:'0.82rem', color:'var(--text-secondary)', lineHeight:1.7, marginBottom:12 }}>{exp.reason}</p>
+                <div style={{ display:'flex', gap:16, fontSize:'0.75rem', color:'var(--text-muted)' }}>
+                  <span>Model confidence: <b style={{ color:'var(--cyan-400)' }}>{(exp.confidence*100).toFixed(0)}%</b></span>
+                  <span>·</span>
+                  <span>
+                    {exp.confidence >= 0.95 ? <><CheckCircle2 size={12} style={{ verticalAlign:'middle', color:'var(--green-400)' }} /> Confirmed</>
+                     : exp.confidence >= 0.85 ? 'Strong Candidate' : 'Moderate Candidate'}
+                  </span>
+                </div>
+              </div>
+              {/* Confidence bar */}
+              <div style={{ flexShrink:0, width:60, textAlign:'center' }}>
+                <div style={{ fontSize:'1.1rem', fontWeight:800, color: exp.confidence>=0.9?'var(--green-400)':exp.confidence>=0.75?'var(--amber-400)':'var(--orange-400)' }}>
+                  {(exp.confidence*100).toFixed(0)}%
+                </div>
+                <div style={{ fontSize:'0.6rem', color:'var(--text-muted)', textTransform:'uppercase' }}>conf</div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
