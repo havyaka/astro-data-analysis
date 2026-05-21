@@ -1,10 +1,9 @@
-// src/pages/LandingPage.jsx — Observatory hero with starfield
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Telescope, Radio, Activity, Cpu, ChevronRight, Zap, Globe, Shield } from 'lucide-react'
 import StarfieldCanvas from '../components/StarfieldCanvas'
-import { OBSERVATORY_STATS } from '../data/mockData'
+import { useObservatory } from '../hooks/useObservatory'
 
 function useCounter(target, duration = 1800) {
   const [val, setVal] = useState(0)
@@ -32,10 +31,12 @@ const FEATURES = [
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const events  = useCounter(OBSERVATORY_STATS.totalEvents)
-  const frbs    = useCounter(OBSERVATORY_STATS.frbCandidates)
-  const anomaly = useCounter(OBSERVATORY_STATS.anomaliesDetected)
-  const gb      = useCounter(OBSERVATORY_STATS.dataProcessedGB)
+  const { stats } = useObservatory()
+
+  const totalRows  = useCounter(stats.totalEvents)
+  const datasets   = useCounter(stats.totalDatasets ?? 0)
+  const anomalies  = useCounter(stats.anomaliesDetected)
+  const aiModels   = useCounter(stats.aiModelsRunning)
 
   return (
     <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -93,18 +94,24 @@ export default function LandingPage() {
         style={{ position:'relative', zIndex:10, maxWidth:800, margin:'0 auto', padding:'0 24px 60px' }}
         initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.3, duration:0.6 }}
       >
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:20, padding:28, backdropFilter:'blur(16px)' }}>
-          {[
-            { val: events,  suffix:'',   label:'Total Events',     color:'var(--purple-400)' },
-            { val: frbs,    suffix:'',   label:'FRB Candidates',   color:'var(--cyan-400)'   },
-            { val: anomaly, suffix:'',   label:'Anomalies Found',  color:'var(--red-400)'    },
-            { val: gb,      suffix:' GB',label:'Data Processed',   color:'var(--green-400)'  },
-          ].map(({ val, suffix, label, color }) => (
-            <div key={label} style={{ textAlign:'center' }}>
-              <div style={{ fontSize:'clamp(1.4rem,3vw,2rem)', fontWeight:900, color, lineHeight:1 }}>{val.toLocaleString()}{suffix}</div>
-              <div style={{ fontSize:'0.72rem', color:'var(--text-muted)', marginTop:8, textTransform:'uppercase', letterSpacing:'0.05em', fontWeight:600 }}>{label}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 28, backdropFilter: 'blur(16px)' }}>
+          {totalRows === 0 && datasets === 0 && anomalies === 0 ? (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>
+              No datasets uploaded yet — upload a CSV to see real stats here
             </div>
-          ))}
+          ) : (
+            [
+              { val: totalRows,  suffix: '',   label: 'Total Rows Analyzed', color: 'var(--purple-400)' },
+              { val: datasets,   suffix: '',   label: 'Datasets Uploaded',   color: 'var(--cyan-400)'   },
+              { val: anomalies,  suffix: '',   label: 'Anomalies Found',     color: 'var(--red-400)'    },
+              { val: aiModels,   suffix: '',   label: 'Models Trained',      color: 'var(--green-400)'  },
+            ].map(({ val, suffix, label, color }) => (
+              <div key={label} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 'clamp(1.4rem,3vw,2rem)', fontWeight: 900, color, lineHeight: 1 }}>{val.toLocaleString()}{suffix}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>{label}</div>
+              </div>
+            ))
+          )}
         </div>
       </motion.section>
 

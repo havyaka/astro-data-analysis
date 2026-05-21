@@ -1,0 +1,39 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.venv
+venv/
+env/
+
+# ── Database (contains user data — never commit) ───────────────────────────
+backend/anomaly_detection.db
+backend/*.db
+
+# ── Uploaded datasets (user files — potentially large / private) ───────────
+backend/dataset/uploads/
+backend/dataset/processed/
+
+# ── Trained model weights (large binary files) ────────────────────────────
+backend/models/saved/
+
+# ── Node / Frontend ───────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/node_modules/.vite/
+
+# ── OS / Editor ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

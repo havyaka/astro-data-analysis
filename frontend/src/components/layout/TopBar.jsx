@@ -7,12 +7,7 @@ export default function TopBar({ onMenuClick }) {
   const { utcTime, criticalAlertCount, stats, systemOnline } = useObservatory()
   const [searchOpen, setSearchOpen] = useState(false)
 
-  const indicators = [
-    { label: 'CHIME',  ok: true  },
-    { label: 'FAST',   ok: true  },
-    { label: 'VLA',    ok: false },
-    { label: 'AI',     ok: true  },
-  ]
+
 
   return (
     <header style={{
@@ -39,21 +34,19 @@ export default function TopBar({ onMenuClick }) {
         <Menu size={20} />
       </button>
 
-      {/* Telescope status pills */}
+      {/* Backend status pill */}
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-        {indicators.map(({ label, ok }) => (
-          <div key={label} style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '3px 9px', borderRadius: 999,
-            background: ok ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)',
-            border: `1px solid ${ok ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}`,
-            fontSize: '0.7rem', fontWeight: 700,
-            color: ok ? 'var(--green-400)' : 'var(--red-400)',
-          }}>
-            {ok ? <Wifi size={10} /> : <WifiOff size={10} />}
-            {label}
-          </div>
-        ))}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '3px 9px', borderRadius: 999,
+          background: systemOnline ? 'rgba(74,222,128,0.08)' : 'rgba(239,68,68,0.08)',
+          border: `1px solid ${systemOnline ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)'}`,
+          fontSize: '0.7rem', fontWeight: 700,
+          color: systemOnline ? 'var(--green-400)' : 'var(--red-400)',
+        }}>
+          {systemOnline ? <Wifi size={10} /> : <WifiOff size={10} />}
+          {systemOnline ? 'AI Engine Online' : 'Backend Offline'}
+        </div>
       </div>
 
       {/* Spacer */}
@@ -74,10 +67,14 @@ export default function TopBar({ onMenuClick }) {
         </button>
       )}
 
-      {/* Data throughput */}
+      {/* Dataset info — real row count from uploaded datasets only */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0, gap: 1 }} className="topbar-meta">
-        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Data</span>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--cyan-400)', fontFamily: 'var(--font-mono)' }}>{stats.dataProcessedGB} GB</span>
+        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {stats.totalDatasets > 0 ? `${stats.totalDatasets} Dataset${stats.totalDatasets !== 1 ? 's' : ''}` : 'No Data'}
+        </span>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: stats.totalEvents > 0 ? 'var(--cyan-400)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          {stats.totalEvents > 0 ? `${stats.totalEvents.toLocaleString()} rows` : '—'}
+        </span>
       </div>
 
       {/* Alert bell */}

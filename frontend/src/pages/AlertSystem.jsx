@@ -1,7 +1,7 @@
 // src/pages/AlertSystem.jsx — Priority alert management center
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ALERT_RECORDS } from '../data/mockData'
+import { useObservatory } from '../hooks/useObservatory'
 import AlertBadge from '../components/ui/AlertBadge'
 import { Bell, CheckCircle2, Clock, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -13,6 +13,7 @@ const ACTIONS = {
   spectral_analysis:  'Initiate Spectral Analysis',
   rfi_flagging:       'Apply RFI Flagging',
   recalibrate:        'Recalibrate Instrument',
+  sensor_recalibration: 'Calibrate Detector Sensors',
 }
 
 function AlertCard({ alert, delay }) {
@@ -43,7 +44,7 @@ function AlertCard({ alert, delay }) {
             <span>·</span>
             <span>{alert.scope}</span>
             <span>·</span>
-            <span>{alert.time}</span>
+            <span>{alert.timestamp}</span>
             <span>·</span>
             <span>Confidence: <b style={{ color:'var(--cyan-400)' }}>{(alert.confidence*100).toFixed(0)}%</b></span>
           </div>
@@ -58,7 +59,7 @@ function AlertCard({ alert, delay }) {
           <div style={{ display:'flex', gap:16, flexWrap:'wrap', marginBottom:14 }}>
             <div className="glow-card" style={{ flex:1, minWidth:200, padding:14 }}>
               <div className="section-label">Recommended Action</div>
-              <div style={{ fontSize:'0.85rem', color:'var(--amber-400)', fontWeight:600 }}>{ACTIONS[alert.action]}</div>
+              <div style={{ fontSize:'0.85rem', color:'var(--amber-400)', fontWeight:600 }}>{ACTIONS[alert.action] || alert.action}</div>
             </div>
             <div className="glow-card" style={{ flex:1, minWidth:200, padding:14 }}>
               <div className="section-label">Event Type</div>
@@ -90,12 +91,13 @@ function AlertCard({ alert, delay }) {
 }
 
 export default function AlertSystem() {
+  const { alerts } = useObservatory()
   const [filter, setFilter] = useState('ALL')
   const levels = ['ALL', 'CRITICAL', 'HIGH', 'MODERATE', 'LOW']
-  const filtered = filter === 'ALL' ? ALERT_RECORDS : ALERT_RECORDS.filter(a => a.level === filter)
+  const filtered = filter === 'ALL' ? alerts : alerts.filter(a => a.level === filter)
 
   const counts = { CRITICAL:0, HIGH:0, MODERATE:0, LOW:0 }
-  ALERT_RECORDS.forEach(a => { if (counts[a.level] !== undefined) counts[a.level]++ })
+  alerts.forEach(a => { if (counts[a.level] !== undefined) counts[a.level]++ })
 
   return (
     <div className="page-container">
@@ -134,7 +136,13 @@ export default function AlertSystem() {
 
       {/* Alert list */}
       <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-        {filtered.map((a, i) => <AlertCard key={a.id} alert={a} delay={i*0.05} />)}
+        {filtered.length === 0 ? (
+          <div style={{ textAlign:'center', padding:40, color:'var(--text-muted)', fontSize:'0.85rem' }} className="glow-card">
+            No alerts found for the selected severity level.
+          </div>
+        ) : (
+          filtered.map((a, i) => <AlertCard key={a.id} alert={a} delay={i*0.05} />)
+        )}
       </div>
     </div>
   )
